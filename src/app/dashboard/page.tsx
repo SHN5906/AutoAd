@@ -14,11 +14,16 @@ import {
 export default function DashboardPage() {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [stats, setStats] = useState({ totalAds: 0, thisMonth: 0, avgSeoScore: 0, totalViews: 0 });
+    const [userName, setUserName] = useState("Utilisateur");
 
     useEffect(() => {
         initSampleData();
         setVehicles(getVehicles());
         setStats(getStats());
+        const profile = localStorage.getItem("autoad-profile");
+        if (profile) {
+            try { setUserName(JSON.parse(profile).name || "Utilisateur"); } catch { /* noop */ }
+        }
     }, []);
 
     return (
@@ -28,7 +33,7 @@ export default function DashboardPage() {
                 <div>
                     <p className="text-[10px] text-primary/60 uppercase tracking-[0.2em] font-semibold mb-1">Tableau de bord</p>
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                        Bonjour, Jean
+                        Bonjour, {userName}
                     </h1>
                 </div>
                 <Link href="/dashboard/create">

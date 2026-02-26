@@ -17,7 +17,22 @@ export const metadata: Metadata = {
   title: "AutoAd — Générateur d'annonces auto IA",
   description:
     "Créez des annonces automobiles SEO optimisées en quelques secondes grâce à l'intelligence artificielle. L'outil indispensable des concessionnaires modernes.",
-  keywords: "annonce automobile, IA, SEO, concessionnaire, générateur annonce",
+  keywords: "annonce automobile, IA, SEO, concessionnaire, générateur annonce, Leboncoin",
+  metadataBase: new URL("https://auto-ad-six.vercel.app"),
+  openGraph: {
+    title: "AutoAd — Générateur d'annonces auto IA",
+    description: "Créez des annonces Leboncoin optimisées SEO en 30 secondes grâce à l'IA.",
+    url: "https://auto-ad-six.vercel.app",
+    siteName: "AutoAd",
+    type: "website",
+    locale: "fr_FR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AutoAd — Générateur d'annonces auto IA",
+    description: "Créez des annonces Leboncoin optimisées SEO en 30 secondes grâce à l'IA.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
@@ -27,6 +42,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="dark" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

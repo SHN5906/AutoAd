@@ -162,7 +162,11 @@ export default function LandingPage() {
             </div>
             <span className="text-sm font-semibold">AutoAd</span>
           </div>
-          <p className="text-[11px] text-white/20">© 2026 AutoAd. Tous droits réservés.</p>
+          <div className="flex items-center gap-6">
+            <Link href="/pricing" className="text-[11px] text-white/30 hover:text-white/60 transition-colors">Tarifs</Link>
+            <Link href="/legal" className="text-[11px] text-white/30 hover:text-white/60 transition-colors">Mentions légales</Link>
+            <p className="text-[11px] text-white/20">© 2026 AutoAd</p>
+          </div>
         </div>
       </footer>
     </div>

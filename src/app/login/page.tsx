@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,28 +9,68 @@ import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+function setCookie(name: string, value: string, days: number) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+}
+
 export default function LoginPage() {
+    return (
+        <Suspense>
+            <LoginForm />
+        </Suspense>
+    );
+}
+
+function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [name, setName] = useState("");
+
+    const redirect = searchParams.get("redirect") || "/dashboard";
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!email || !password) { toast.error("Veuillez remplir tous les champs"); return; }
+        if (!isLogin && !name) { toast.error("Veuillez entrer votre nom"); return; }
+        if (password.length < 3) { toast.error("Mot de passe trop court"); return; }
+
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        toast.success("Connexion réussie");
-        router.push("/dashboard");
+        await new Promise((resolve) => setTimeout(resolve, 600));
+
+        // Store user profile
+        const profile = {
+            name: isLogin ? (localStorage.getItem("autoad-profile") ? JSON.parse(localStorage.getItem("autoad-profile")!).name : email.split("@")[0]) : name,
+            email,
+            concession: isLogin ? (localStorage.getItem("autoad-profile") ? JSON.parse(localStorage.getItem("autoad-profile")!).concession : "") : "",
+            createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem("autoad-profile", JSON.stringify(profile));
+        setCookie("autoad-session", btoa(email), 30);
+
+        toast.success(isLogin ? "Connexion réussie" : "Compte créé avec succès");
+        router.push(redirect);
         setLoading(false);
     };
 
     const handleGoogleAuth = async () => {
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        const profile = {
+            name: "Utilisateur Google",
+            email: "user@gmail.com",
+            concession: "",
+            createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem("autoad-profile", JSON.stringify(profile));
+        setCookie("autoad-session", btoa("google-user"), 30);
         toast.success("Connexion réussie");
-        router.push("/dashboard");
+        router.push(redirect);
         setLoading(false);
     };
 
@@ -147,6 +187,20 @@ export default function LoginPage() {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        {!isLogin && (
+                            <div className="space-y-1.5">
+                                <Label htmlFor="name" className="text-xs text-muted-foreground">Nom complet</Label>
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    placeholder="Jean Dupont"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="h-10 bg-white/[0.03] border-border/60 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
+                                    required
+                                />
+                            </div>
+                        )}
                         <div className="space-y-1.5">
                             <Label htmlFor="email" className="text-xs text-muted-foreground">Email</Label>
                             <Input

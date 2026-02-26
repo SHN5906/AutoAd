@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// ─── Rate Limiting ───
+const rateLimit = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW = 60_000; // 1 minute
+
+function checkRateLimit(ip: string): boolean {
+    const now = Date.now();
+    const entry = rateLimit.get(ip);
+    if (!entry || now > entry.resetTime) {
+        rateLimit.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+        return true;
+    }
+    if (entry.count >= RATE_LIMIT_MAX) return false;
+    entry.count++;
+    return true;
+}
+
 const FUEL_LABELS: Record<string, string> = {
     essence: "Essence", diesel: "Diesel", hybride: "Hybride",
     electrique: "Électrique", gpl: "GPL",
@@ -66,6 +83,15 @@ Redige l'annonce maintenant.`;
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting
+        const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+        if (!checkRateLimit(ip)) {
+            return NextResponse.json(
+                { success: false, error: "Trop de requêtes. Réessayez dans une minute." },
+                { status: 429 }
+            );
+        }
+
         const body = await request.json();
         const { brand, model, year, mileage, price, fuel, transmission, notes, style, phase } = body;
 
@@ -76,7 +102,8 @@ export async function POST(request: NextRequest) {
 
         // ─── Gemini API (if key is set) ───
         if (process.env.GEMINI_API_KEY) {
-            const { GoogleGenerativeAI } = await import("@google/generative-ai");
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { GoogleGenerativeAI } = require("@google/generative-ai");
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
             const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
             const result = await geminiModel.generateContent(prompt);

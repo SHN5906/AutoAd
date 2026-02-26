@@ -1,55 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-    LayoutDashboard,
-    PlusCircle,
-    History,
-    LogOut,
-    Menu,
-    X,
-    ChevronRight,
-} from "lucide-react";
+import { LayoutDashboard, PlusCircle, Clock, User, LogOut, Menu, X } from "lucide-react";
 
 const navItems = [
     { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
     { href: "/dashboard/create", label: "Nouvelle annonce", icon: PlusCircle },
-    { href: "/dashboard/history", label: "Historique", icon: History },
+    { href: "/dashboard/history", label: "Historique", icon: Clock },
 ];
+
+interface UserProfile {
+    name: string;
+    email: string;
+    concession: string;
+}
 
 export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [profile, setProfile] = useState<UserProfile>({ name: "Utilisateur", email: "", concession: "" });
+
+    useEffect(() => {
+        const stored = localStorage.getItem("autoad-profile");
+        if (stored) {
+            try { setProfile(JSON.parse(stored)); } catch { /* noop */ }
+        }
+    }, []);
+
+    const isActive = (href: string) =>
+        href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 
     const handleLogout = () => {
+        document.cookie = "autoad-session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         router.push("/login");
     };
 
-    const isActive = (href: string) =>
-        pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+    const initials = profile.name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2) || "U";
 
     return (
         <>
-            {/* ─── Mobile Top Bar ─── */}
+            {/* Mobile Top Bar */}
             <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-[#09090b]/80 backdrop-blur-xl border-b border-border/50 flex items-center justify-between px-4">
                 <Link href="/dashboard" className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-                            <circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" />
+                            <circle cx="7" cy="17" r="2" />
+                            <path d="M9 17h6" />
+                            <circle cx="17" cy="17" r="2" />
                         </svg>
                     </div>
-                    <span className="text-sm font-semibold">AutoAd</span>
+                    <span className="text-sm font-semibold tracking-tight">AutoAd</span>
                 </Link>
                 <button
                     onClick={() => setMobileOpen(!mobileOpen)}
@@ -59,35 +68,39 @@ export default function Sidebar() {
                 </button>
             </header>
 
-            {/* ─── Mobile Overlay ─── */}
+            {/* Mobile overlay */}
             {mobileOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+                    className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
                     onClick={() => setMobileOpen(false)}
                 />
             )}
 
-            {/* ─── Sidebar ─── */}
+            {/* Sidebar */}
             <aside
                 className={`fixed top-0 left-0 z-50 h-screen w-[220px] bg-[#0c0c0e] flex flex-col transition-transform duration-300 ease-out lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
             >
                 {/* Logo */}
                 <div className="h-14 flex items-center gap-2.5 px-5">
-                    <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-                            <circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" />
+                            <circle cx="7" cy="17" r="2" />
+                            <path d="M9 17h6" />
+                            <circle cx="17" cy="17" r="2" />
                         </svg>
                     </div>
                     <span className="text-sm font-semibold tracking-tight">AutoAd</span>
                 </div>
 
+                {/* Menu label */}
+                <div className="px-5 mt-2 mb-2">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/40 font-semibold">Menu</p>
+                </div>
+
                 {/* Nav */}
-                <nav className="flex-1 px-3 pt-4 space-y-0.5">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium px-3 mb-2">
-                        Menu
-                    </p>
+                <nav className="flex-1 px-3 space-y-0.5">
                     {navItems.map((item) => {
                         const active = isActive(item.href);
                         return (
@@ -95,45 +108,42 @@ export default function Sidebar() {
                                 key={item.href}
                                 href={item.href}
                                 onClick={() => setMobileOpen(false)}
-                                className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${active
-                                        ? "bg-primary/10 text-primary"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.03]"
+                                className={`flex items-center gap-2.5 px-3 h-9 rounded-lg text-[13px] transition-all duration-200 ${active
+                                        ? "bg-primary/10 text-primary font-medium"
+                                        : "text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.03]"
                                     }`}
                             >
-                                <item.icon className={`w-4 h-4 ${active ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"}`} />
-                                <span className="flex-1">{item.label}</span>
-                                {active && <ChevronRight className="w-3 h-3 text-primary/50" />}
+                                <item.icon className="w-4 h-4 flex-shrink-0" />
+                                <span>{item.label}</span>
+                                {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
                             </Link>
                         );
                     })}
                 </nav>
 
-                {/* Divider */}
-                <div className="mx-4 h-px bg-border/40" />
-
                 {/* User */}
-                <div className="p-3">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors text-left">
-                                <Avatar className="w-7 h-7">
-                                    <AvatarFallback className="bg-primary/15 text-primary text-[10px] font-semibold">
-                                        JD
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[13px] font-medium truncate">Jean Dupont</p>
-                                    <p className="text-[10px] text-muted-foreground truncate">Premium Auto</p>
-                                </div>
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" sideOffset={8} className="w-48">
-                            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer gap-2 text-xs">
-                                <LogOut className="w-3.5 h-3.5" />
-                                Se déconnecter
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                <div className="p-3 mt-auto border-t border-border/20">
+                    <Link
+                        href="/dashboard/profile"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/[0.03] transition-colors group"
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold flex-shrink-0">
+                            {initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{profile.name}</p>
+                            <p className="text-[10px] text-muted-foreground/40 truncate">{profile.concession || profile.email}</p>
+                        </div>
+                        <User className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />
+                    </Link>
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-red-500/10 transition-colors w-full mt-1 text-muted-foreground/40 hover:text-red-400"
+                    >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span className="text-[11px]">Déconnexion</span>
+                    </button>
                 </div>
             </aside>
         </>

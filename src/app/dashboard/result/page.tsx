@@ -8,7 +8,7 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-    Copy, Save, RefreshCw, ArrowLeft, Check, ChevronDown, Zap, Minimize2, Loader2,
+    Copy, Save, RefreshCw, ArrowLeft, Check, ChevronDown, Zap, Minimize2, Loader2, Pencil, Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -33,6 +33,7 @@ export default function ResultPage() {
     const [copied, setCopied] = useState(false);
     const [regenerating, setRegenerating] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [editing, setEditing] = useState(false);
 
     useEffect(() => {
         const stored = sessionStorage.getItem("autoad-result");
@@ -172,17 +173,39 @@ export default function ResultPage() {
                         <div className="w-1 h-4 rounded-full gradient-primary" />
                         <span className="text-[11px] text-muted-foreground/70 uppercase tracking-[0.15em] font-semibold">Annonce générée</span>
                     </div>
-                    <button
-                        onClick={handleCopy}
-                        className="text-[11px] text-muted-foreground/50 hover:text-foreground transition-colors flex items-center gap-1"
-                    >
-                        {copied ? <><Check className="w-3 h-3 text-emerald-400" /><span className="text-emerald-400">Copié</span></> : <><Copy className="w-3 h-3" /> Copier</>}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setEditing(!editing)}
+                            className={`text-[11px] transition-colors flex items-center gap-1 ${editing ? "text-primary" : "text-muted-foreground/50 hover:text-foreground"
+                                }`}
+                        >
+                            {editing ? <><Eye className="w-3 h-3" /> Aperçu</> : <><Pencil className="w-3 h-3" /> Modifier</>}
+                        </button>
+                        <button
+                            onClick={handleCopy}
+                            className="text-[11px] text-muted-foreground/50 hover:text-foreground transition-colors flex items-center gap-1"
+                        >
+                            {copied ? <><Check className="w-3 h-3 text-emerald-400" /><span className="text-emerald-400">Copié</span></> : <><Copy className="w-3 h-3" /> Copier</>}
+                        </button>
+                    </div>
                 </div>
                 <div className="p-5">
-                    <pre className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground/85 font-[inherit]">
-                        {result.content}
-                    </pre>
+                    {editing ? (
+                        <textarea
+                            value={result.content}
+                            onChange={(e) => {
+                                const updated = { ...result, content: e.target.value, saved: false };
+                                setResult(updated);
+                                setSaved(false);
+                                sessionStorage.setItem("autoad-result", JSON.stringify(updated));
+                            }}
+                            className="w-full min-h-[400px] bg-transparent text-[13px] leading-relaxed text-foreground/85 font-[inherit] resize-y outline-none border border-border/20 rounded-xl p-4 focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all"
+                        />
+                    ) : (
+                        <pre className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground/85 font-[inherit]">
+                            {result.content}
+                        </pre>
+                    )}
                 </div>
             </div>
 
